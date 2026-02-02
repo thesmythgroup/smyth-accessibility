@@ -1,0 +1,31 @@
+{
+  "name": "smyth-accessibility-action",
+  "version": "0.1.0",
+  "description": "GitHub Action for LLM-based first-pass accessibility analysis on web-related code",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && ncc build src/index.ts -o dist --minify --source-map",
+    "compile": "tsc",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "github-actions",
+    "accessibility",
+    "a11y",
+    "wcag",
+    "llm"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.1",
+    "@anthropic-ai/sdk": "^0.32.1",
+    "openai": "^4.73.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@vercel/ncc": "^0.38.2",
+    "eslint": "^9.14.0",
+    "typescript": "^5.6.3"
+  }
+}

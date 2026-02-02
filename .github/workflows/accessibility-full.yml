@@ -1,0 +1,23 @@
+# Example: run accessibility analysis on the entire repo (periodic or manual).
+# Add OPENAI_API_KEY or ANTHROPIC_API_KEY as a repo secret.
+name: Accessibility (full repo)
+on:
+  schedule:
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+jobs:
+  accessibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Smyth Accessibility
+        uses: ./
+        with:
+          scope: full
+          provider: openai
+          model: gpt-4o
+          acceptability-level: wcag-aa
+          file-patterns: "*.tsx,*.jsx,*.html,*.vue,*.svelte,*.css"
+          fail-on: warn
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

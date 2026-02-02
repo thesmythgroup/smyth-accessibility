@@ -1,0 +1,24 @@
+# Example: run accessibility analysis on PR changeset only.
+# Add OPENAI_API_KEY or ANTHROPIC_API_KEY as a repo secret.
+name: Accessibility (PR changeset)
+on:
+  pull_request:
+    types: [opened, synchronize]
+jobs:
+  accessibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Smyth Accessibility
+        uses: ./
+        with:
+          scope: pr
+          provider: openai
+          model: gpt-4o
+          acceptability-level: wcag-aa
+          fail-on: warn
+          post-pr-comment: "true"
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

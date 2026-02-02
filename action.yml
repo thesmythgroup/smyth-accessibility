@@ -1,0 +1,48 @@
+name: "Smyth Accessibility"
+description: "LLM-based first-pass accessibility analysis on web-related code (PR changeset or full repo)"
+branding:
+  icon: "shield"
+  color: "blue"
+inputs:
+  scope:
+    description: "Which set of files to analyze: pr (changeset only) or full (entire repo)"
+    required: true
+    default: "pr"
+  provider:
+    description: "LLM provider: openai or anthropic"
+    required: true
+    default: "openai"
+  model:
+    description: "Model name (e.g. gpt-4o, claude-3-5-sonnet)"
+    required: true
+    default: "gpt-4o"
+  acceptability-level:
+    description: "Acceptability threshold: wcag-a, wcag-aa, wcag-aaa, or custom"
+    required: false
+    default: "wcag-aa"
+  file-patterns:
+    description: 'Comma-separated globs or extensions (default: web-related). Example: "*.tsx,*.jsx,*.html"'
+    required: false
+    default: ""
+  base-ref:
+    description: "For PR mode only: override base ref for diff (default: PR base sha)"
+    required: false
+    default: ""
+  fail-on:
+    description: "When to fail the job: none, warn, or error"
+    required: false
+    default: "warn"
+  post-pr-comment:
+    description: "When true and event is pull_request, post a comment with the summary"
+    required: false
+    default: "false"
+outputs:
+  findings-count:
+    description: "Total number of findings (errors + warnings)"
+  has-errors:
+    description: "Whether any error-level findings were reported"
+  has-warnings:
+    description: "Whether any warning-level findings were reported"
+runs:
+  using: "node20"
+  main: "dist/index.js"
