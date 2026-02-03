@@ -46,7 +46,11 @@ async function run(): Promise<void> {
   reportFindings(findings, config.failOn);
   const summaryMarkdown = buildSummaryMarkdown(findings);
   setJobSummary(summaryMarkdown);
-  await postPrCommentIfRequested(summaryMarkdown, config.postPrComment);
+  await postPrCommentIfRequested(
+    summaryMarkdown,
+    config.postPrComment,
+    config.githubToken
+  );
 }
 
 run().catch((err) => {

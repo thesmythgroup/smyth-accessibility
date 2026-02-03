@@ -48,6 +48,7 @@ describe("getConfig", () => {
     expect(config.acceptabilityLevel).toBe("wcag-aa");
     expect(config.failOn).toBe("warn");
     expect(config.postPrComment).toBe(false);
+    expect(config.githubToken).toBe("");
   });
 
   it("parses post-pr-comment true", () => {

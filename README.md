@@ -23,16 +23,17 @@ Files are analyzed **one at a time** (each request finishes before the next star
 
 ### Action inputs
 
-| Input                 | Required | Default       | Description                                                              |
-| --------------------- | -------- | ------------- | ------------------------------------------------------------------------ |
-| `scope`               | Yes      | `pr`          | `pr` = changeset only, `full` = entire repo                              |
-| `provider`            | Yes      | `openai`      | `openai` or `anthropic`                                                  |
-| `model`               | Yes      | `gpt-4o`      | Model name (e.g. `gpt-4o`, `claude-3-5-sonnet`)                          |
-| `acceptability-level` | No       | `wcag-aa`     | `wcag-a`, `wcag-aa`, `wcag-aaa`, or `custom`                             |
-| `file-patterns`       | No       | (web-related) | Comma-separated globs/extensions, e.g. `*.tsx,*.jsx,*.html`              |
-| `base-ref`            | No       | (PR base sha) | For PR mode only: override base ref for diff                             |
-| `fail-on`             | No       | `warn`        | `none`, `warn`, or `error` — when to fail the job                        |
-| `post-pr-comment`     | No       | `false`       | When `true` and event is `pull_request`, post a comment with the summary |
+| Input                 | Required | Default       | Description                                                                                        |
+| --------------------- | -------- | ------------- | -------------------------------------------------------------------------------------------------- |
+| `scope`               | Yes      | `pr`          | `pr` = changeset only, `full` = entire repo                                                        |
+| `provider`            | Yes      | `openai`      | `openai` or `anthropic`                                                                            |
+| `model`               | Yes      | `gpt-4o`      | Model name (e.g. `gpt-4o`, `claude-3-5-sonnet`)                                                    |
+| `acceptability-level` | No       | `wcag-aa`     | `wcag-a`, `wcag-aa`, `wcag-aaa`, or `custom`                                                       |
+| `file-patterns`       | No       | (web-related) | Comma-separated globs/extensions, e.g. `*.tsx,*.jsx,*.html`                                        |
+| `base-ref`            | No       | (PR base sha) | For PR mode only: override base ref for diff                                                       |
+| `fail-on`             | No       | `warn`        | `none`, `warn`, or `error` — when to fail the job                                                  |
+| `post-pr-comment`     | No       | `false`       | When `true` and event is `pull_request`, post a comment with the summary                           |
+| `github-token`        | No       | (runner env)  | Token for posting PR comments; use `${{ secrets.GITHUB_TOKEN }}` if you see "GITHUB_TOKEN not set" |
 
 ### Configure for PR (changeset only)
 
@@ -40,6 +41,7 @@ Files are analyzed **one at a time** (each request finishes before the next star
 - Trigger on `pull_request` (e.g. `types: [opened, synchronize]`).
 - Checkout with `fetch-depth: 0` so the diff is available.
 - Set the secret for your chosen provider (e.g. `OPENAI_API_KEY`).
+- For `post-pr-comment: true`, add `github-token: ${{ secrets.GITHUB_TOKEN }}` and job `permissions: pull-requests: write`.
 
 Example: see [.github/workflows/pr-accessibility.yml](.github/workflows/pr-accessibility.yml).
 
@@ -63,6 +65,9 @@ on:
 jobs:
   accessibility:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,6 +81,7 @@ jobs:
           acceptability-level: wcag-aa
           fail-on: warn
           post-pr-comment: "true"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
@@ -136,7 +142,7 @@ Use `file-patterns` to limit which files are analyzed (e.g. to stay within runne
 | `has-errors`     | `true` if any error-level findings           |
 | `has-warnings`   | `true` if any warning-level findings         |
 
-Findings are also emitted as **annotations** (file + line) and summarized in the **job summary**. With `post-pr-comment: true` and a `pull_request` event, a comment is posted on the PR with the summary.
+Findings are also emitted as **annotations** (file + line) and summarized in the **job summary**. With `post-pr-comment: true` and a `pull_request` event, a comment is posted on the PR with the summary (pass `github-token: ${{ secrets.GITHUB_TOKEN }}` and `permissions: pull-requests: write` if you see "GITHUB_TOKEN not set").
 
 ## Development
 
