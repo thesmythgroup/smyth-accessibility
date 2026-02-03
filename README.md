@@ -19,6 +19,8 @@ Set these as **secrets** or **repository/organization variables** in GitHub. Onl
 | `OPENAI_API_KEY`    | When `provider: openai`    | OpenAI    |
 | `ANTHROPIC_API_KEY` | When `provider: anthropic` | Anthropic |
 
+Files are analyzed **one at a time** (each request finishes before the next starts), with a **1 second delay between requests** to reduce rate-limit pressure. On **429 (rate limit / quota)** or **503**, the action retries that request up to 3 times with exponential backoff (2s, 4s, 8s). If you hit OpenAI quota limits, switch to `provider: anthropic` and set `ANTHROPIC_API_KEY`, or check your OpenAI plan and billing.
+
 ### Action inputs
 
 | Input                 | Required | Default       | Description                                                              |
