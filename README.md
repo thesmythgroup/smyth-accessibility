@@ -143,4 +143,4 @@ npm install
 npm run build
 ```
 
-The action entrypoint is `dist/index.js` (built with `tsc` and `ncc`).
+The action entrypoint is `dist/index.js` (built with `tsc` and `ncc`). The example workflows in this repo run `npm ci` and `npm run build` before `uses: ./` so `dist/` exists at runtime. If you use this action from another repo (e.g. `uses: smythgroup/smyth-accessibility-action@main`), that ref must contain a pre-built `dist/` (e.g. commit `dist/` after building, or use a release that includes it).
