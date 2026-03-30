@@ -19,18 +19,21 @@ Set these as **secrets** or **repository/organization variables** in GitHub. Onl
 | `OPENAI_API_KEY`    | When `provider: openai`    | OpenAI    |
 | `ANTHROPIC_API_KEY` | When `provider: anthropic` | Anthropic |
 
+Files are analyzed **one at a time** (each request finishes before the next starts), with a **1 second delay between requests** to reduce rate-limit pressure. On **429 (rate limit / quota)** or **503**, the action retries that request up to 3 times with exponential backoff (2s, 4s, 8s). If you hit OpenAI quota limits, switch to `provider: anthropic` and set `ANTHROPIC_API_KEY`, or check your OpenAI plan and billing.
+
 ### Action inputs
 
-| Input                 | Required | Default       | Description                                                              |
-| --------------------- | -------- | ------------- | ------------------------------------------------------------------------ |
-| `scope`               | Yes      | `pr`          | `pr` = changeset only, `full` = entire repo                              |
-| `provider`            | Yes      | `openai`      | `openai` or `anthropic`                                                  |
-| `model`               | Yes      | `gpt-4o`      | Model name (e.g. `gpt-4o`, `claude-3-5-sonnet`)                          |
-| `acceptability-level` | No       | `wcag-aa`     | `wcag-a`, `wcag-aa`, `wcag-aaa`, or `custom`                             |
-| `file-patterns`       | No       | (web-related) | Comma-separated globs/extensions, e.g. `*.tsx,*.jsx,*.html`              |
-| `base-ref`            | No       | (PR base sha) | For PR mode only: override base ref for diff                             |
-| `fail-on`             | No       | `warn`        | `none`, `warn`, or `error` — when to fail the job                        |
-| `post-pr-comment`     | No       | `false`       | When `true` and event is `pull_request`, post a comment with the summary |
+| Input                 | Required | Default       | Description                                                                                        |
+| --------------------- | -------- | ------------- | -------------------------------------------------------------------------------------------------- |
+| `scope`               | Yes      | `pr`          | `pr` = changeset only, `full` = entire repo                                                        |
+| `provider`            | Yes      | `openai`      | `openai` or `anthropic`                                                                            |
+| `model`               | Yes      | `gpt-4o`      | Model name (e.g. `gpt-4o`, `claude-3-5-sonnet`)                                                    |
+| `acceptability-level` | No       | `wcag-aa`     | `wcag-a`, `wcag-aa`, `wcag-aaa`, or `custom`                                                       |
+| `file-patterns`       | No       | (web-related) | Comma-separated globs/extensions, e.g. `*.tsx,*.jsx,*.html`                                        |
+| `base-ref`            | No       | (PR base sha) | For PR mode only: override base ref for diff                                                       |
+| `fail-on`             | No       | `warn`        | `none`, `warn`, or `error` — when to fail the job                                                  |
+| `post-pr-comment`     | No       | `false`       | When `true` and event is `pull_request`, post a comment with the summary                           |
+| `github-token`        | No       | (runner env)  | Token for posting PR comments; use `${{ secrets.GITHUB_TOKEN }}` if you see "GITHUB_TOKEN not set" |
 
 ### Configure for PR (changeset only)
 
@@ -38,6 +41,7 @@ Set these as **secrets** or **repository/organization variables** in GitHub. Onl
 - Trigger on `pull_request` (e.g. `types: [opened, synchronize]`).
 - Checkout with `fetch-depth: 0` so the diff is available.
 - Set the secret for your chosen provider (e.g. `OPENAI_API_KEY`).
+- For `post-pr-comment: true`, add `github-token: ${{ secrets.GITHUB_TOKEN }}` and job `permissions: pull-requests: write`.
 
 Example: see [.github/workflows/pr-accessibility.yml](.github/workflows/pr-accessibility.yml).
 
@@ -61,6 +65,9 @@ on:
 jobs:
   accessibility:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -74,6 +81,7 @@ jobs:
           acceptability-level: wcag-aa
           fail-on: warn
           post-pr-comment: "true"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
@@ -134,7 +142,7 @@ Use `file-patterns` to limit which files are analyzed (e.g. to stay within runne
 | `has-errors`     | `true` if any error-level findings           |
 | `has-warnings`   | `true` if any warning-level findings         |
 
-Findings are also emitted as **annotations** (file + line) and summarized in the **job summary**. With `post-pr-comment: true` and a `pull_request` event, a comment is posted on the PR with the summary.
+Findings are also emitted as **annotations** (file + line) and summarized in the **job summary**. With `post-pr-comment: true` and a `pull_request` event, a comment is posted on the PR with the summary (pass `github-token: ${{ secrets.GITHUB_TOKEN }}` and `permissions: pull-requests: write` if you see "GITHUB_TOKEN not set").
 
 ## Development
 
@@ -143,4 +151,4 @@ npm install
 npm run build
 ```
 
-The action entrypoint is `dist/index.js` (built with `tsc` and `ncc`).
+The action entrypoint is `dist/index.js` (built with `tsc` and `ncc`). The example workflows in this repo run `npm ci` and `npm run build` before `uses: ./` so `dist/` exists at runtime. If you use this action from another repo (e.g. `uses: smythgroup/smyth-accessibility-action@main`), that ref must contain a pre-built `dist/` (e.g. commit `dist/` after building, or use a release that includes it).

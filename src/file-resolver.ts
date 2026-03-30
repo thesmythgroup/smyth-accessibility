@@ -19,7 +19,7 @@ function getDefaultPatterns(): string[] {
   return DEFAULT_WEB_EXTENSIONS.map((ext) => `*${ext}`);
 }
 
-function parseFilePatterns(input: string): string[] {
+export function parseFilePatterns(input: string): string[] {
   const trimmed = input.trim();
   if (!trimmed) {
     return getDefaultPatterns();
@@ -50,6 +50,14 @@ function extensionMatches(path: string, patterns: string[]): boolean {
 
 function filterByPatterns(paths: string[], patterns: string[]): string[] {
   return paths.filter((path) => extensionMatches(path, patterns));
+}
+
+export function filterPathsByPatterns(
+  paths: string[],
+  patternInput: string
+): string[] {
+  const patterns = parseFilePatterns(patternInput);
+  return filterByPatterns(paths, patterns);
 }
 
 function getPrChangedFiles(baseRef: string, cwd: string): string[] {

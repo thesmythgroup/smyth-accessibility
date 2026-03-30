@@ -36,6 +36,10 @@ inputs:
     description: "When true and event is pull_request, post a comment with the summary"
     required: false
     default: "false"
+  github-token:
+    description: "Token for posting PR comments. Defaults to GITHUB_TOKEN from the runner; pass secrets.GITHUB_TOKEN from your workflow if the warning appears."
+    required: false
+    default: ""
 outputs:
   findings-count:
     description: "Total number of findings (errors + warnings)"

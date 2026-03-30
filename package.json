@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc && ncc build src/index.ts -o dist --minify --source-map",
     "compile": "tsc",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "github-actions",
@@ -25,7 +27,9 @@
   "devDependencies": {
     "@types/node": "^22.9.0",
     "@vercel/ncc": "^0.38.2",
+    "@vitest/coverage-v8": "^2.1.0",
     "eslint": "^9.14.0",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.0"
   }
 }

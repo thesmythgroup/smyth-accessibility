@@ -7,10 +7,20 @@ on:
 jobs:
   accessibility:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # required for post-pr-comment
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build
+      - run: test -f dist/index.js || (echo "::error::dist/index.js missing after build" && exit 1)
       - name: Smyth Accessibility
         uses: ./
         with:
@@ -20,5 +30,6 @@ jobs:
           acceptability-level: wcag-aa
           fail-on: warn
           post-pr-comment: "true"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

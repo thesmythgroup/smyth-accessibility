@@ -78,6 +78,7 @@ export function getConfig(): ActionConfig {
   const baseRefInput = core.getInput("base-ref").trim();
   const failOnRaw = core.getInput("fail-on") || "warn";
   const postPrCommentRaw = core.getInput("post-pr-comment") || "false";
+  const githubToken = core.getInput("github-token").trim();
 
   const scope = parseScope(scopeRaw);
   const provider = parseProvider(providerRaw);
@@ -101,6 +102,7 @@ export function getConfig(): ActionConfig {
     baseRef,
     failOn,
     postPrComment,
+    githubToken,
   };
 }
 

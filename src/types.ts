@@ -22,6 +22,7 @@ export interface ActionConfig {
   baseRef: string;
   failOn: FailOn;
   postPrComment: boolean;
+  githubToken: string;
 }
 
 export interface FileToAnalyze {

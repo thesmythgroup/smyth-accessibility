@@ -75,7 +75,8 @@ export function setJobSummary(summaryMarkdown: string): void {
 
 export async function postPrCommentIfRequested(
   summaryMarkdown: string,
-  postPrComment: boolean
+  postPrComment: boolean,
+  githubTokenInput: string
 ): Promise<void> {
   if (!postPrComment) {
     return;
@@ -86,9 +87,11 @@ export async function postPrCommentIfRequested(
   if (prNumber == null) {
     return;
   }
-  const token = process.env.GITHUB_TOKEN;
+  const token = githubTokenInput.trim() || process.env.GITHUB_TOKEN || "";
   if (!token) {
-    core.warning("GITHUB_TOKEN not set; skipping PR comment");
+    core.warning(
+      "GITHUB_TOKEN not set; skipping PR comment. Pass github-token: ${{ secrets.GITHUB_TOKEN }} (and permissions: pull-requests: write) to post comments."
+    );
     return;
   }
   const octokit = github.getOctokit(token);
