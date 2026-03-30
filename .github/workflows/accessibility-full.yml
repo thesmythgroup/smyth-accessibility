@@ -24,7 +24,7 @@ jobs:
           provider: openai
           model: gpt-4o
           acceptability-level: wcag-aa
-          file-patterns: "*.tsx,*.jsx,*.html,*.vue,*.svelte,*.css"
+          file-patterns: '["**/*.{tsx,jsx,html,vue,svelte,css}"]'
           fail-on: warn
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

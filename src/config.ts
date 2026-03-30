@@ -8,6 +8,10 @@ import type {
   FailOn,
 } from "./types";
 
+/** Must match `file-patterns` default in action.yml. */
+const DEFAULT_FILE_PATTERNS_JSON =
+  '["**/*.{html,htm,tsx,jsx,vue,svelte,css,scss,less}"]';
+
 const VALID_SCOPES: Scope[] = ["pr", "full"];
 const VALID_PROVIDERS: Provider[] = ["openai", "anthropic"];
 const VALID_ACCEPTABILITY: AcceptabilityLevel[] = [
@@ -58,6 +62,43 @@ function parseFailOn(value: string): FailOn {
   return "warn";
 }
 
+function parseFilePatternsInput(raw: string): string[] {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return parseFilePatternsInput(DEFAULT_FILE_PATTERNS_JSON);
+  }
+  if (trimmed.startsWith("[")) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(trimmed) as unknown;
+    } catch {
+      throw new Error(
+        'Invalid file-patterns: could not parse JSON array (e.g. ["apps/web/**/*.tsx"])'
+      );
+    }
+    if (!Array.isArray(parsed)) {
+      throw new Error(
+        'file-patterns: when using JSON, value must be an array of glob strings'
+      );
+    }
+    const out = parsed
+      .map((x) => String(x).trim())
+      .filter(Boolean);
+    if (out.length === 0) {
+      return parseFilePatternsInput(DEFAULT_FILE_PATTERNS_JSON);
+    }
+    return out;
+  }
+  const lines = trimmed
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length === 0) {
+    return parseFilePatternsInput(DEFAULT_FILE_PATTERNS_JSON);
+  }
+  return lines;
+}
+
 function getBaseRefFromContext(): string {
   const payload = github.context.payload;
   const pr = payload.pull_request as { base?: { sha?: string } } | undefined;
@@ -74,7 +115,8 @@ export function getConfig(): ActionConfig {
   const model = core.getInput("model", { required: true }).trim();
   const acceptabilityLevelRaw =
     core.getInput("acceptability-level") || "wcag-aa";
-  const filePatterns = core.getInput("file-patterns") || "";
+  const filePatternsRaw = core.getInput("file-patterns");
+  const filePatterns = parseFilePatternsInput(filePatternsRaw);
   const baseRefInput = core.getInput("base-ref").trim();
   const failOnRaw = core.getInput("fail-on") || "warn";
   const postPrCommentRaw = core.getInput("post-pr-comment") || "false";

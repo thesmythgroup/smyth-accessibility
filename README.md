@@ -23,16 +23,16 @@ Files are analyzed **one at a time** (each request finishes before the next star
 
 ### Action inputs
 
-| Input                 | Required | Default       | Description                                                                                        |
-| --------------------- | -------- | ------------- | -------------------------------------------------------------------------------------------------- |
-| `scope`               | Yes      | `pr`          | `pr` = changeset only, `full` = entire repo                                                        |
-| `provider`            | Yes      | `openai`      | `openai` or `anthropic`                                                                            |
-| `model`               | Yes      | `gpt-4o`      | Model name (e.g. `gpt-4o`, `claude-3-5-sonnet`)                                                    |
-| `acceptability-level` | No       | `wcag-aa`     | `wcag-a`, `wcag-aa`, `wcag-aaa`, or `custom`                                                       |
-| `file-patterns`       | No       | (web-related) | Comma-separated globs/extensions, e.g. `*.tsx,*.jsx,*.html`                                        |
-| `base-ref`            | No       | (PR base sha) | For PR mode only: override base ref for diff                                                       |
-| `fail-on`             | No       | `warn`        | `none`, `warn`, or `error` — when to fail the job                                                  |
-| `post-pr-comment`     | No       | `false`       | When `true` and event is `pull_request`, post a comment with the summary                           |
+| Input                 | Required | Default       | Description                                                              |
+| --------------------- | -------- | ------------- | ------------------------------------------------------------------------ |
+| `scope`               | Yes      | `pr`          | `pr` = changeset only, `full` = entire repo                              |
+| `provider`            | Yes      | `openai`      | `openai` or `anthropic`                                                  |
+| `model`               | Yes      | `gpt-4o`      | Model name (e.g. `gpt-4o`, `claude-3-5-sonnet`)                          |
+| `acceptability-level` | No       | `wcag-aa`     | `wcag-a`, `wcag-aa`, `wcag-aaa`, or `custom`                             |
+| `file-patterns`       | No       | `["**/*.{html,htm,tsx,jsx,vue,svelte,css,scss,less}"]` | JSON array of globs or one glob per line ([`fs.promises.glob`](https://nodejs.org/docs/latest-v24.x/api/fs.html#fspromisesglobpattern-options)) |
+| `base-ref`            | No       | (PR base sha) | For PR mode only: override base ref for diff                             |
+| `fail-on`             | No       | `warn`        | `none`, `warn`, or `error` — when to fail the job                        |
+| `post-pr-comment`     | No       | `false`       | When `true` and event is `pull_request`, post a comment with the summary |
 | `github-token`        | No       | (runner env)  | Token for posting PR comments; use `${{ secrets.GITHUB_TOKEN }}` if you see "GITHUB_TOKEN not set" |
 
 ### Configure for PR (changeset only)
@@ -49,7 +49,7 @@ Example: see [.github/workflows/pr-accessibility.yml](.github/workflows/pr-acces
 
 - Use `scope: full`.
 - Trigger on `schedule` (cron) and/or `workflow_dispatch`.
-- Optionally set `file-patterns` to restrict to certain paths (e.g. `src/**/*.tsx` via extensions like `*.tsx,*.jsx`).
+- Optionally set `file-patterns` to restrict paths (e.g. JSON `["apps/web/**/*.{jsx,tsx}"]` or a multiline block with one glob per line).
 
 Example: see [.github/workflows/accessibility-full.yml](.github/workflows/accessibility-full.yml).
 
@@ -73,7 +73,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Smyth Accessibility
-        uses: smythgroup/smyth-accessibility-action@main
+        uses: thesmythgroup/smyth-accessibility@main
         with:
           scope: pr
           provider: openai
@@ -104,19 +104,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Smyth Accessibility
-        uses: smythgroup/smyth-accessibility-action@main
+        uses: thesmythgroup/smyth-accessibility@main
         with:
           scope: full
           provider: openai
           model: gpt-4o
           acceptability-level: wcag-aa
-          file-patterns: "*.tsx,*.jsx,*.html,*.vue,*.svelte,*.css"
+          file-patterns: '["**/*.{tsx,jsx,html,vue,svelte,css}"]'
           fail-on: warn
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
 
 Use `file-patterns` to limit which files are analyzed (e.g. to stay within runner and API limits).
+
+### `file-patterns`
+
+- **Default:** defined on the action’s `file-patterns` input (same glob as above). If you pass an empty value or `[]`, the action falls back to that default. Only files that also appear in the git diff (`scope: pr`) or in `git ls-files` (`scope: full`) are analyzed.
+- **JSON array:** e.g. `file-patterns: '["apps/web/**/*.{jsx,tsx}"]'`
+- **Multiple lines:** one glob per line (YAML `|` block):
+
+```yaml
+file-patterns: |
+  apps/web/**/*.tsx
+  packages/ui/**/*.jsx
+```
 
 ## Acceptability levels
 

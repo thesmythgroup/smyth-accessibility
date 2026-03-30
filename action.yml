@@ -21,9 +21,11 @@ inputs:
     required: false
     default: "wcag-aa"
   file-patterns:
-    description: 'Comma-separated globs or extensions (default: web-related). Example: "*.tsx,*.jsx,*.html"'
+    description: >
+      Glob patterns (Node.js fs.promises.glob). Default is a JSON array of one pattern covering common web extensions.
+      Override with a JSON array, e.g. ["apps/web/**/*.{jsx,tsx}"], or one glob per line for multiple patterns.
     required: false
-    default: ""
+    default: '["**/*.{html,htm,tsx,jsx,vue,svelte,css,scss,less}"]'
   base-ref:
     description: "For PR mode only: override base ref for diff (default: PR base sha)"
     required: false
@@ -48,5 +50,5 @@ outputs:
   has-warnings:
     description: "Whether any warning-level findings were reported"
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/index.js"
