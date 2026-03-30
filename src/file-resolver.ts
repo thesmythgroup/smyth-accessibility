@@ -1,63 +1,22 @@
-import { execSync } from "child_process";
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
+import { execSync } from "node:child_process";
+import { readFileSync, existsSync } from "node:fs";
+import { glob } from "node:fs/promises";
+import { join } from "node:path";
 import type { Scope } from "./types";
 
-const DEFAULT_WEB_EXTENSIONS = [
-  ".html",
-  ".htm",
-  ".tsx",
-  ".jsx",
-  ".vue",
-  ".svelte",
-  ".css",
-  ".scss",
-  ".less",
-];
-
-function getDefaultPatterns(): string[] {
-  return DEFAULT_WEB_EXTENSIONS.map((ext) => `*${ext}`);
+function normalizeRepoPath(p: string): string {
+  return p.replace(/\\/g, "/");
 }
 
-export function parseFilePatterns(input: string): string[] {
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return getDefaultPatterns();
+async function collectGlobMatches(
+  patterns: string[],
+  cwd: string
+): Promise<Set<string>> {
+  const set = new Set<string>();
+  for await (const rel of glob(patterns, { cwd })) {
+    set.add(normalizeRepoPath(String(rel)));
   }
-  return trimmed
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
-function extensionMatches(path: string, patterns: string[]): boolean {
-  const lower = path.toLowerCase();
-  const matches = patterns.some((p) => {
-    if (p.startsWith("*.")) {
-      const ext = p.slice(1);
-      return lower.endsWith(ext);
-    }
-    if (p.includes("*")) {
-      const re = new RegExp(
-        "^" + p.replace(/\*/g, ".*").replace(/\./g, "\\.") + "$"
-      );
-      return re.test(path);
-    }
-    return path === p || path.endsWith(p);
-  });
-  return matches;
-}
-
-function filterByPatterns(paths: string[], patterns: string[]): string[] {
-  return paths.filter((path) => extensionMatches(path, patterns));
-}
-
-export function filterPathsByPatterns(
-  paths: string[],
-  patternInput: string
-): string[] {
-  const patterns = parseFilePatterns(patternInput);
-  return filterByPatterns(paths, patterns);
+  return set;
 }
 
 function getPrChangedFiles(baseRef: string, cwd: string): string[] {
@@ -80,18 +39,20 @@ function getFullRepoFiles(cwd: string): string[] {
     .filter(Boolean);
 }
 
-export function resolveFilesToAnalyze(
+export async function resolveFilesToAnalyze(
   scope: Scope,
-  filePatternsInput: string,
+  filePatterns: string[],
   baseRef: string,
   workspaceRoot: string
-): string[] {
-  const patterns = parseFilePatterns(filePatternsInput);
+): Promise<string[]> {
+  const globMatched = await collectGlobMatches(filePatterns, workspaceRoot);
   const rawPaths =
     scope === "pr"
       ? getPrChangedFiles(baseRef, workspaceRoot)
       : getFullRepoFiles(workspaceRoot);
-  const filtered = filterByPatterns(rawPaths, patterns);
+  const filtered = rawPaths.filter((path) =>
+    globMatched.has(normalizeRepoPath(path))
+  );
   return filtered.filter((path) => {
     const fullPath = join(workspaceRoot, path);
     return existsSync(fullPath);

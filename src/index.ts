@@ -14,7 +14,7 @@ async function run(): Promise<void> {
   const config = getConfig();
   const env = getEnvForProvider(config.provider);
 
-  const paths = resolveFilesToAnalyze(
+  const paths = await resolveFilesToAnalyze(
     config.scope,
     config.filePatterns,
     config.baseRef,

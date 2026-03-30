@@ -18,7 +18,7 @@ export interface ActionConfig {
   provider: Provider;
   model: string;
   acceptabilityLevel: AcceptabilityLevel;
-  filePatterns: string;
+  filePatterns: string[];
   baseRef: string;
   failOn: FailOn;
   postPrComment: boolean;
